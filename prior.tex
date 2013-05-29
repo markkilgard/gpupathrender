@@ -1,0 +1,119 @@
+
+\section{Prior Path Rendering Systems}
+\label{sec:prior}
+
+\subsection{CPU-based Path Rendering Systems Critiqued}
+
+Path rendering is historically and still typically performed by
+CPU-based scan line renderers.  Paths are converted into a set of edges.
+These edges are transformed and sorted in Y-order.  Then the edges are
+intersected with each scan line, sorted in X-order, and pixels in the
+path region are updated.
+
+The scan-line rendering approach is notable for being work-efficient
+and cache-friendly.  No computation is expended on pixels that are
+obviously outside the path and only active edges are considered when
+processing a given scan line.  Such scan line renderers use a ``chunker''
+strategy---where rather than the chunk being a 2D tile, the chunk is a
+single scan line.  This leads to a reasonably friendly access pattern for
+CPU caches.  Additionally the scan line enter/leave counts are transient.
+In contrast to a window-sized ancillary buffer such as a depth or stencil
+buffer, the scan line enter/leave counts can live in the cache and have
+their storage recycled for each processed scan line.
+
+While work-efficient {\em and} cache-friendly as noted, this CPU-intensive
+approach is quite sequential.  Every path must be transformed into screen
+space.  Every path must be scan line rasterized.  Every scan line must
+be intersected with the active edge list.  Every sorted active edge list
+must be scanned left-to-right.  There is not an easy way to pipeline
+all these tasks or exploit massive parallelism---such as is routine for
+GPU-accelerated 3D graphics.  Hence this is an approach that maps well
+to the CPU but cannot be obviously accelerated in this form by the GPU.
+
+\subsection{GPU-based Path Rendering Systems}
+
+Over the years, many attempts have been made---with varying degrees of
+mixed success---to accelerate path rendering with GPUs.
+We postpone discussion of prior techniques for GPU rendering of curves with the stencil buffer
+to Section~\ref{sec:approach} since they are the basis for our approach.
+
+\subsubsection{Acceleration of Path Rendering Programming Interfaces}
+
+Cairo \cite{Rejected} is an open-source path rendering implementation.
+An early attempt at GPU-acceleration called Glitz \cite{Glitz} has
+since been abandoned.  Glitz operated at the level of the XRender
+\cite{Packard:2001:DIX:647054.715760} extension so did not accelerate
+paths directly.  Arguably, Glitz was a more GPU-assisted back-end than
+GPU accelerated. 
+More recently, Cairo has worked on a first-class GPU back-end but the
+immediate mode nature of the Cairo API and converting CPU-transformed
+paths to spans limits the acceleration opportunities.  
+
+Microsoft's Direct2D \cite{Direct2D} API is layered upon Direct3D.
+Direct2D operates by transforming paths on the CPU and then performing
+a constrained trapezoidal tessellation of each path.  The result is a
+set of pixel-space trapezoids and additional shaded geometry to compute
+fractional coverage for the left and right edges of the trapezoids.
+These trapezoids and shaded geometry are then rasterized by the GPU.
+The resulting performance is generally better than entirely CPU-based
+approaches and requires no ancillary storage for multisample or stencil
+state; Direct2D renders directly into an aliased framebuffer with
+properly antialiased results.  Direct2D's primary disadvantage is the
+ultimate performance is determined not by the GPU (doing fairly trivial
+rasterization) but rather by the CPU performing the transformation and
+trapezoidal tessellation of each path and Direct3D validation work.
+
+Skia is the C++ path rendering API used by Google's Android and Chrome
+browsers.  Skia has a conventional CPU-based path renderer but has
+recently integrated a new OpenGL ES2-accelerated back-end called Ganesh.
+Ganesh has experimented with two accelerated approaches.  The first
+used the stencil buffer to render paths.  Because of API overheads
+with this approach, this first approach was replaced with a second
+approach where the CPU-based rasterizer computes a coverage mask which
+is loaded as a texture upon every path draw to provide the GPU proper
+antialiased coverage.  This hybrid scheme is often bottlenecked by the
+dynamic texture updates required for every rendered path.
+
+The Khronos standards body worked to develop an API standard known
+as OpenVG with the explicit goal of enabling hardware-acceleration of
+path rendering (the {\em VG} stands for vector graphics).
+Various companies and research groups have worked to develop OpenVG
+hardware designs \cite{iMX35,Huang:2006:IOR:1169227.1169771,4637621} that,
+based on available descriptions, are fairly similar to the conventional
+CPU-based scan line rasterizer scheme, recast as a hardware unit.
+Reported performance levels are quite low compared to what we report.
+
+\subsubsection{Vector Texture Schemes}
+
+An unconventional approach to GPU-accelerating path rendering
+is cleverly encoding path content into GPU memory---typically as a
+texture---and then using a programmable shader essentially to decode the
+path content.  Nehad and Hoppe \shortcite{Nehab:2008:RRG:1457515.1409088}
+and Qin \shortcite{QinThesis} adopt variations on this approach.  While this
+approach has some interesting advantages such as being able to directly
+``texture map'' 3D geometry with path rendered content, these approaches
+suffer from the need to preprocess a static path scene into a specific
+texture encoding.  This makes this approach unsuitable for editable or
+dynamic path rendering.  Additionally, many rendering approximations
+and authoring limitations are needed to make vector texture schemes
+tractable.
+
+\subsubsection{Discussion of Deficiencies}
+
+The norm for CPU-based path rendering systems is maintaining roughly
+16 coverage samples per pixel (details vary).  This creates a challenge
+for GPU-based schemes because GPUs often support 1, 2, 4, or 8 samples
+per pixel through multisampling.  This often creates a situation where
+the GPU-accelerated path rendering is inferior to the CPU-based path
+rendering quality.
+
+When path rendering schemes are layered upon existing OpenGL or Direct3D
+APIs, we have observed performance being limited by the state change
+rate of the underlying 3D API.  Often path rendering can result in
+many state changes per path when scenes can easily consist of 100s or
+1000s of paths.  In this case, the API overhead can substantially limit
+the overall performance.  Our experience studying prior approaches to
+using GPUs for path rendering indicates these approaches are often more
+GPU-assisted rather than GPU-accelerated, with this attributable to
+continuous CPU involvement or substantial CPU-based preprocessing.
+

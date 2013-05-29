@@ -1,0 +1,163 @@
+
+\section{Introduction}
+\label{sec:intro}
+
+%% The ``\copyrightspace'' command must be the first command after the 
+%% start of the first section of the body of your paper. It ensures the
+%% copyright space is left at the bottom of the first column on the first
+%% page of your paper.
+
+\copyrightspace
+
+When people surf the web, read PDF documents, interact with smart
+phones or tablets, use productivity software, play casual games, or
+in everyday life encounter the full variety of visual output created
+digitally (advertising, books, logos, signage, etc.), they are experiencing
+resolution-independent 2D graphics.
+
+While 3D graphics dominates graphics research, we observe that most visual
+interactions between humans and computers involve 2D graphics.  Sometimes
+this type of computer graphics is called {\em vector graphics}, but we
+prefer the term {\em path rendering} because the latter term emphasizes
+the path as the unifying primitive for this approach to rendering.
+
+\subsection{Terminology of Path Rendering}
+
+A {\em path} is a sequence of trajectories and contours.  In this context,
+a {\em trajectory} is a connected sequence of {\em path commands}.
+Path commands include line segments, B\'{e}zier curve segments, and
+partial elliptical arcs.  Each path command has an associated set of
+numeric parameters known as {\em path coordinates}.  When a pair of path
+coordinates defines a 2D $(x,y)$ location, this pair is a {\em control
+point}.  Intuitively a trajectory corresponds to pressing a pen's tip
+down on paper, dragging it to draw on the paper, and eventually lifting
+the pen.
+
+A {\em contour} is a trajectory with the same start and end point; in other
+words, a closed trajectory.  These contours and trajectories may be
+convex, self-intersecting, nested in other contours, or may intersect
+other trajectories/contours in the path.  There is generally no bound
+on the number of path segments or trajectories/contours in a path.
+For a rendering ``primitive,'' paths can be quite complex.
+
+Paths are rendered by either {\em filling} or {\em stroking} the path.
+Conceptually, path filling corresponds to determining what points
+(framebuffer sample locations) are logically ``inside'' the path.
+Stroking is roughly the region swept out by a fixed-width pen---centered
+on the trajectory---that travels along the trajectory orthogonal to the
+trajectory's tangent direction.
+
+\subsection{History, Standards, Motivation, and Contributions}
+
+Seminal work by Warnock and Wyatt
+\shortcite{Warnock:1982:DIG:800064.801297} introduced a coherent model
+for path rendering.  Since that time, many standards and programming
+interfaces have incorporated path rendering constructs into their
+2D graphics framework.  Without being exhaustive, we note
+%\vspace{-4pt}
+\begin{itemize}
+\item {\em document presentation and printing}: PostScript \cite{PLRM}, PDF \cite{PDF-Spec}
+\item {\em font specification}: PostScript fonts \cite{Type1-Spec}
+\item {\em immersive web}: Flash \cite{SWF-File-Format}, HTML 5's Scalable Vector Graphics \cite{SVG-Spec}
+\item {\em 2D programming interfaces}: OpenVG \cite{OpenVG-Spec}
+\item {\em productivity software}: Illustrator, Photoshop, Office
+\end{itemize}
+%\vspace{-1pt}
+Despite path rendering's 30 year heritage and broad adoption, it has
+not benefited from acceleration by graphics hardware to anywhere near 
+the extent 3D graphics has.  Most path rendering today is performed
+by the CPU with sequential algorithms, not particularly different from
+their formulation 30 years ago.  Our motivation is to harness {\em existing}
+GPUs to improve the overall experience achievable with path rendering.
+
+We present a productized system for GPU-accelerated path rendering in
+the context of the OpenGL graphics system; see some of our rendering results
+in Figure~\ref{fig:teaser}.  Our system works on the three most-recent
+architectural generations of GeForce and Quadro GPUs---and we expect
+all recent GPUs can support the algorithms and programming interface
+we describe.
+
+The primary contributions delivered by our system are:
+%\vspace{-4pt}
+\begin{itemize}
+  \item A novel "stencil, then cover" programming interface
+  for path rendering, well-suited to acceleration by GPUs.
+  \item Our programming interface's efficient implementation within the
+  OpenGL graphics system to avoid CPU bottlenecks.
+  \item Accompanying algorithms to handle tessellation-free stenciled stroking 
+  of paths, standard stroking embellishments such
+  as dashing, clipping paths to arbitrary paths, and mixing 3D and path
+  rendering.
+\end{itemize}
+%\vspace{-1pt}
+Section~\ref{sec:prior} reviews prior path rendering systems.
+Section~\ref{sec:approach} explains our approach;
+we cite the crucial prior research that our approach integrates in this section.
+Section~\ref{sec:discuss} compares our quality and performance to other
+implementations and highlights our system's novel ability to mix with 3D
+and GPU-shaded rendering.  Section~\ref{sec:future} discusses opportunities for
+future work.
+
+\subsection{New Demands on Path Rendering}
+
+Historically, applications mostly ``pre-render'' 2D content specified
+with paths into bitmaps for glyphs and icons/images for vector artwork,
+then cache and blit those rasterized results as needed.  Rendering
+directly from the path data generally proved too slow to be viable.
+Early window systems based on path rendering concepts such as Sun's NeWS
+\cite{NeWS-Book} and Adobe's Display PostScript \cite{DisplayPostScript}
+were arguably overly ambitious in basing their 2D rendering model around
+path rendering rather than resolution-dependent 2D bitmap rendering as
+did the more successful GDI and X11-based systems that proved easier
+for 2D graphics hardware to accelerate.
+
+\subsubsection{Increasing Screen Density and Resolution}
+
+Smart phones and tablets have created new platforms
+free from legacy display limitations such as relatively low---by today's available technology---display density
+(measured in {\em dots-per-inch} or DPI) and the dated visual appearance established
+by resolution-dependent bitmap graphics.  
+Apple's new iPad display has a display density of 264 DPI, greatly surpassing
+the 100 DPI density norm for PC screens.  These handheld devices
+are carried directly on one's person so their screen real estate is
+relatively fixed---so improvements in display appearance is likely to
+be through increasing screen density rather than enlarging screen area.
+
+Pixel resolutions for conventional monitors are increasing too.
+Large 2560x1600 resolution screens are mass-produced and readily
+available.  Driving such high resolutions with CPU-based path rendering
+schemes is untenable at real-time rates.  Indeed the very heterogeneity of modern displays in terms of
+pixel resolution, screen size, and their combination---pixel
+density---strengthens the case for improving path rendering performance.
+
+\subsubsection{Multi-touch Interfaces}
+
+Mobile devices also rely on multi-touch screens for input so the user is
+extremely aware of the latency between touch gestures and the resulting
+screen update.  The user is literally pointing at the pixels they expect
+to see updated.  Multi-touch encourages rotation and scaling.
+When imagery can easily be rotated, scaled, sub-pixel translated, and even
+projected, assumptions that all text and graphics will be orthographically aligned to
+the screen's pixel grid are no longer a given so
+rendering all path content directly from paths makes sense.
+
+\subsubsection{Immersive Web Standards}
+
+The proximate HTML 5 web standard exposes path rendering functionality
+in a standard and pervasive way through both Scalable Vector Graphics (SVG)
+and the Canvas element.
+
+JavaScript performance has increased to the point that dynamic content
+can be orchestrated within a standards-based HTML 5 web page such that
+the system's path rendering performance is often a bottleneck.
+
+\subsubsection{Power Wall}
+
+Minimizing power consumption has become a mantra for computer system
+design across all classes of devices---whether mobile devices or not.
+When power is at a premium, moving CPU- and bandwidth-intensive
+computations such as pixel manipulation and rasterization to
+more power-efficient GPU circuitry can reduce overall power
+consumption while improving interactivity and minimizing update latency.
+GPU-acceleration of path rendering is precisely such an opportunity.
+

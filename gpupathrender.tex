@@ -1,0 +1,256 @@
+
+% GPU-accelerated Path Rendering paper
+
+%%% The ``\documentclass'' command has one parameter, based on the kind of
+%%% document you are preparing.
+%%%
+%%% [annual] - Technical paper accepted for presentation at the ACM SIGGRAPH 
+%%%   or SIGGRAPH Asia annual conference.
+%%% [sponsored] - Short or full-length technical paper accepted for 
+%%%   presentation at an event sponsored by ACM SIGGRAPH
+%%%   (but not the annual conference Technical Papers program).
+%%% [abstract] - A one-page abstract of your accepted content
+%%%   (Technical Sketches, Posters, Emerging Technologies, etc.). 
+%%%   Content greater than one page in length should use the "[sponsored]"
+%%%   parameter.
+%%% [preprint] - A preprint version of your final content.
+%%% [review] - A technical paper submitted for review. Includes line
+%%%   numbers and anonymization of author and affiliation information.
+
+%\documentclass[review]{acmsiggraph}            % review
+\documentclass[annual]{acmsiggraph}          % preprint
+%\documentclass[reprint,pretty]{acmsiggraph}          % preprint
+
+
+%% Uncomment one of the five lines above depending on where your paper is
+%% in the conference process. ``review'' and ``widereview'' are for review
+%% submission, ``preprint'' is for pre-publication, and ``final'' is for
+%% the version to be printed. The ``final'' variant will accept the 
+%% ``annualconference'' parameter, which changes the height of the space
+%% left clear for the ACM copyright information.
+
+%% The 'helvet' and 'times' packages define the typefaces used for
+%% serif and sans serif type in this document. Computer Modern Roman 
+%% is used for mathematics typesetting. The scale factor is set to .92
+%% to bring the sans-serif type in line with the serif type.
+
+
+%\usepackage[scaled=.92]{helvet}
+\usepackage{times}
+\usepackage{url}
+
+%% The 'graphicx' package allows for the inclusion of EPS figures.
+
+\usepackage{graphicx}
+%\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multirow}
+\usepackage{epstopdf}
+\usepackage{listings}
+%\usepackage{color}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[super]{nth}  % http://www.ctan.org/pkg/nth
+
+%\usepackage[all=normal,floats,leading,paragraphs,charwidths,tracking,wordspacing,lists=tight]{savetrees}
+%\usepackage[all=normal,bibliography]{savetrees}
+
+%\usepackage{natbib}
+%\usepackage{enumitem}
+%%\setlist{nolistsep}
+%%\setlist{notopsep}
+%%\setlist{noitemsep}
+%\usepackage{paralist}
+
+\usepackage{marvosym}
+
+\usepackage{etoolbox}
+
+
+\pagenumbering{arabic}
+
+%%% 1. ``\TOGonlineID''
+%%% When you submit your paper for review, please use the ``\TOGonlineID''
+%%% command to include the online ID value assigned to your paper by the
+%%% submission management system. Replace '45678' with the value you were
+%%% assigned.
+
+\TOGonlineid{0389}
+
+%%% 2. ``\TOGvolume'' and ``\TOGnumber''
+%%% If you are preparing a preprint of your accepted paper, and your paper
+%%% will be published in an issue of the ACM ``Transactions on Graphics''
+%%% journal, replace the ``0'' values in the commands below with the correct
+%%% volume and number values for that issue - you'll get them before your
+%%% final paper is due.
+
+\TOGvolume{31}
+\TOGnumber{6}
+\TOGarticleDOI{2366145.2366183}
+
+%\reprintyear{2012}
+%\reprintlocation{Singapore}
+%\reprintdates{November 28--December 1}
+%\reprintlogo{SA2012_white}
+%\reprintlogobefore{\hspace*{-.3in}}
+
+\definecolor{DarkGreen}{RGB}{0,100,0}
+\newcommand{\comment}[1]{}
+
+% lstlisting settings
+% syntax coloring
+\lstset{
+language=C,
+showspaces=false,
+showstringspaces=false,
+basicstyle=\ttfamily \small,
+commentstyle=\color{DarkGreen} \em,
+keywordstyle=\color{blue},
+morekeywords={float2,float3,float4,tex1D,CENTROID,TEXCOORD0,COLOR,TEXUNIT0,
+discard,sampler1D,uniform,out,length,ubyte,MOVE_TO,LINE_TO,CLOSE_PATH,
+uint,SYSTEM_FONT_NAME,STANDARD_FONT_NAME,PathGlyphRange,PATH_JOIN_STYLE,MITER_TRUNCATE,PATH_STROKE_WIDTH,
+PathCommands,PathParameteri,PathParameterf,GenPaths,USE_MISSING_GLYPH,SHORT,bitfield,
+PathString,BOLD_BIT,sizei,MatrixLoadIdentity,MatrixOrtho,PROJECTION,MODELVIEW,
+PathDashArray,Color3f,CoverStrokePath,CONVEX_HULL,COUNT_UP,StencilStrokePath,
+STENCIL_TEST,ROUND,PATH_JOIN_STYLE,PATH_STROKE_WIDTH,PathParameteri,PathParameterf,
+Enable,StencilFunc,StencilOp,KEEP,ZERO,NOTEQUAL,CoverFillPath,StencilFillPath,
+strlen,PATH_FORMAT_SVG,NULL,FLOAT,PATH_MITER_LIMIT}
+}
+
+% hyperref features
+\hypersetup{
+colorlinks=true,
+pdfstartview=FitV,
+linkcolor=blue,
+citecolor=blue,
+urlcolor=blue,
+}
+
+
+
+%% use this for zero \parindent and non-zero \parskip, intelligently.
+
+%\usepackage{parskip}
+
+%% Optional: the 'caption' package provides a nicer-looking replacement
+%% for the standard caption environment. With 'labelfont=bf,'textfont=it',
+%% caption labels are bold and caption text is italic.
+
+\usepackage[labelfont=bf,textfont=it]{caption}
+
+\makeatletter
+\g@addto@macro\@verbatim\small
+\makeatother
+
+\pdfcompresslevel0
+
+%% Paper title.
+
+\title{GPU-accelerated Path Rendering}
+
+%%% The ``\author{}'' command takes the names and affiliations of each of the
+%%% authors of your paper or abstract. The ``\thanks{}'' command takes the
+%%% contact information for each author.
+%%% For multiple authors, separate each author's information by the ``\and''
+%%% command.
+
+\newcommand{\asp}{\hspace*{12mm}}
+\makeatletter
+\author{{Mark J. Kilgard \asp Jeff Bolz}\vspace*{1mm}\\NVIDIA Corporation%
+\thanks{e-mail: \{mjk,jbolz\}\hspace*{-0.15mm}\protect\raisebox{-0.25mm}{@}nvidia.com}
+}
+\makeatother
+
+%%% The ``pdfauthor'' command accepts the authors of the work,
+%%% comma-delimited, and adds this information to the PDF metadata.
+
+\pdfauthor{Mark Kilgard, Jeff Bolz}
+
+%%% Keywords that describe your work. The ``\keywordlist'' command will print
+%%% them out.
+
+\keywords{path rendering, vector graphics, OpenGL, stencil buffer}
+
+%%%%%% START OF THE PAPER %%%%%%
+
+%\setlength{\intextsep}{0pt}
+
+\newcommand{\urlwofont}[1]
+{
+\urlstyle{same}\url{#1}
+}
+
+\begin{document}
+
+\teaser{
+  \includegraphics[height=1.33in]{teaser_flash.png}
+  \includegraphics[height=1.33in]{teaser_vangogh.png}
+  \includegraphics[height=1.33in]{teaser_siggraph.png}
+  \includegraphics[height=1.33in]{teaser_car.png}
+  \caption{\label{fig:teaser} GPU-accelerated scenes rendered at super-real-time rates with
+  our system:
+ Snail Bob Flash-based game (5ms) by permission of Andrey Kovalishin and Maxim Yurchenko,
+ Van Gogh SVG scene with gradients
+  (5.26ms) by permission of Enrique Meza C, complete (shown clipped) SIGGRAPH web page (4.8ms), and SVG scene with path
+  clipping (1.9ms) by permission of Michael Grosberg, all
+  rendered on a GeForce 560M laptop.}
+
+}
+
+%% The ``\maketitle'' command must be the first command after the
+%% ``\begin{document}'' command. It prepares and prints the title block.
+
+\maketitle
+
+%\makeatletter
+%\preto{\@verbatim}{\topsep=0pt \partopsep=0pt }
+%\preto{\@lstlisting}{\topsep=0pt \partopsep=0pt }
+%\makeatother
+
+%% Abstract section.
+
+%\vspace{-10pt}
+
+\input{abstract}
+
+%% ACM Computing Review (CR) categories. 
+%% See <http://www.acm.org/class/1998/> for details.
+%% The ``\CRcat'' command takes four arguments.
+\begin{CRcatlist}
+  \CRcat{I.3.2}{Computer Graphics}{Graphics Systems}{Stand-alone systems};
+\end{CRcatlist}
+
+%% The ``\keywordlist'' command prints out the keywords.
+\keywordlist
+
+\TOGlinkslist
+
+\input{intro}
+
+\begin{figure*}[t!]
+        \center{\includegraphics[width=6.99in,height=3.2in]{nvpr_performance.eps}}
+        \caption{\label{fig:nvpr-performance} Performance ratios rendering SVG content at window resolutions from $100^2$ to $1100^2$.
+  A ratio of 1.0 means the {\tt NV\_path\_rendering} (16 samples per pixel) performance is equal to the other renderer; higher ratios indicate how many multiples faster {\tt NV\_path\_rendering} is than the alternative.  Note the logarithmic Y axis.  Scenes were selected for their variety.  Benchmark configuration is a GeForce 650 and fast Core i7 CPU.}
+\end{figure*}
+
+\input{prior}
+
+\input{approach}
+
+%\input{api}
+
+\input{discuss}
+
+\input{future}
+
+\input{ack}
+
+\pdfbookmark[1]{References}{bkmk:references}
+\bibliographystyle{acmsiggraph}
+%\nocite{*}  % include references not cited in the paper
+\bibliography{gpupathrender}
+
+
+\end{document}
+
+% end

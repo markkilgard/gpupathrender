@@ -1,0 +1,24 @@
+
+\section{Future Work}
+\label{sec:future}
+
+We believe our performance can be further improved.  We are investigating
+hardware improvements to mitigate some of the memory bandwidth expense
+involved in our underlying stencil-based algorithms.  In particular,
+we are seeking to reduce the GPU memory footprint.
+
+Web browser architecture should change to incorporate GPU-accelerated
+path rendering.  Today web browsers
+respecify paths every time a web page with path content is re-rendered
+assuming respecifying paths is cheap relative to the expense of rendering them.
+When path rendering is fully GPU-accelerated, a retained model of
+rendering is more appropriate and  efficient.  We believe web browsers
+should behave more like video games in this respect to exploit the GPU.
+
+Mobile devices are power constrained so off-loading path rendering to
+a graphics processor designed for efficient pixel processing
+makes good sense.  Mobile devices in particular prize a low-latency
+experience for the user so the sooner the device can complete its
+resolution-independent 2D rendering, the better the user experience and
+the sooner the device can power down to a low power state.
+
