@@ -37,10 +37,22 @@
 % - version 0.82 2012/01/05 Stephen Spencer
 %   - bugfix: added ``breaklinks=true'' to hyperref setup
 %
+% Several changes have been made to this file by AWB.  They
+% are marked in the file.  They mimic changes by JOB.
+%
 % ---------------------------------------------------------------------------
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmsiggraph}[2012/01/05 ACM SIGGRAPH class]
+% -- Begin change by AWB
+% The cite package makes working with the new citation format a little
+% less objectionable.  But one cannot include cite after acmsiggraph
+% has already redefined the \cite command.  So it needs to be loaded
+% first.  If there were a reason why someone might NOT want to load
+% the cite package, then it should be made a class option to
+% acmsiggraph.
+%\RequirePackage{cite}
+% -- End change by AWB
 
 % lots of options aren't allowed.
 
@@ -75,6 +87,24 @@
 \newif\if@ACMpreprint
 \@ACMpreprintfalse
 \DeclareOption{preprint}{\@ACMpreprinttrue}
+
+% -- Begin change by AWB
+% Prep-rints are nice, but many people like to post a copy of
+% the paper after it has been accepted, a re-print.  Lines marked
+% with ADDED by AWB (reprint mod)
+% The old version of the SIGGRAPH proceedings has some nice formatting
+% with a headrule and  headers with the name of the conference.  This
+% option adds those headers.  In addition to specifying reprintyear, and
+% reprintlocation, you also give reprintdates and optionally
+% reprintlogo.
+\newif\if@ACMreprint
+\@ACMreprintfalse
+\DeclareOption{reprint}{\@ACMreprinttrue}
+
+\newif\if@ACMpretty
+\@ACMprettyfalse
+\DeclareOption{pretty}{\@ACMprettytrue}
+% -- End change by AWB
 
 % pass the options, and load the 'article' class, on which 'acmsiggraph' 
 % is based.
@@ -131,14 +161,71 @@
 \setlength{\ACMcopyrightspace}{0in}
 \fi
 
+\if@ACMreprint
+\setlength{\ACMcopyrightspace}{1.5in}
+\fi
+
 % define the ``\copyrightspace'' command.
 % (todo) don't do this if ``\ACMcopyrightspace'' is zero.
 
+\newcommand{\ACMdefaultinsidecopyrightspacetext}{%
+  \if@ACMannual\fi
+  \if@ACMreview\fi
+  \if@ACMpreprint
+    \textsf{%
+      \if@ACMpretty\vfill\vfill\textbf{\ACMpreprinttext}\vfill\fi
+      This work has been submitted or accepted for publication. Copyright may be
+      transferred without further notice and the accepted version may
+      then be posted by the publisher. 
+    }%
+  \fi
+  \if@ACMreprint
+    \textsf{
+      \begin{minipage}{\columnwidth}
+        \renewcommand{\baselinestretch}{1}\fontsize{12}{12}\selectfont% 
+        %\renewcommand{\baselinestretch}{1}\selectfont% 
+%\begin{flushleft}
+Copyright ACM, (\ACMreprintyear).  This is the author's version of the work.  It is posted here by permission of ACM for your personal use.  Not for redistribution.  The definitive version will be published in ACM Transactions on Graphics, http://doi.acm.org
+%\end{flushleft}
+      \end{minipage}      
+    }%
+  \fi
+}     
+\newcommand{\ACMabovecopyrightspacetext}{}
+\newcommand{\abovecopyrightspacetext}[1]{\renewcommand{\ACMabovecopyrightspacetext}{\par\noindent #1\\}}
+\newcommand{\ACMinsidecopyrightspacetext}{\ACMdefaultinsidecopyrightspacetext}
+\newcommand{\insidecopyrightspacetext}[1]{\renewcommand{\ACMinsidecopyrightspacetext}{#1}}
 \newcommand{\copyrightspace}{%
   \renewcommand{\thefootnote}{}%
-  \footnotetext[0]{\rule[\ACMcopyrightspace]{2.71828in}{0in}}%
-  \renewcommand{\thefootnote}{\arabic{footnote}}
+  \footnotetext[0]{%
+    \par\noindent\vspace{-4ex}%
+    \ACMabovecopyrightspacetext%
+    \parbox[t][\ACMcopyrightspace][b]{\columnwidth}{%
+	      \if@ACMannual
+      \else
+        \ACMinsidecopyrightspacetext
+ 	\vspace{1.25ex}%
+      \fi
+    }%
+  }%
+  \renewcommand{\thefootnote}{\arabic{footnote}}%
 }
+
+% -- Begin change by AWB
+% Many people like to put their email addresses above the copyright
+% space, so the \abovecopyrightspacetext command is added.
+
+%\newcommand{\ACMabovecopyrightspacetext}{}
+%\newcommand{\abovecopyrightspacetext}[1]{\renewcommand{\ACMabovecopyrightspacetext}{\noindent #1\\}}
+
+%\newcommand{\copyrightspace}{%
+%  \renewcommand{\thefootnote}{}%
+%  \footnotetext[0]{\ACMabovecopyrightspacetext \rule[\ACMcopyrightspace]{2.71828in}{0in}}%
+  %\footnotetext[0]{ \rule[\ACMcopyrightspace]{2.71828in}{0in}}%
+%  \renewcommand{\thefootnote}{\arabic{footnote}}
+%}
+% -- End change by AWB
+
 
 % in ``review'' mode, the ``\onlineid'' command passes the value given
 % to the paper by the online submission system. This gets printed out 
@@ -154,6 +241,29 @@
 \newcommand{\TOGvolume}[1]{\gdef\@ACMvolume{#1}}
 \newcommand{\TOGnumber}[1]{\gdef\@ACMnumber{#1}}
 \newcommand{\@ACMpreprinttext}{To appear in ACM TOG \@ACMvolume(\@ACMnumber).}
+
+%%%
+
+% -- Begin change by AWB (reprint/pretty mod)
+\newcommand{\ACMreprintyear}{????}
+\newcommand{\reprintyear}[1]{\renewcommand{\ACMreprintyear}{#1}}
+
+\newcommand{\ACMreprintlocation}{}
+\newcommand{\reprintlocation}[1]{\renewcommand{\ACMreprintlocation}{#1}}
+
+\newcommand{\ACMreprinttext}{From the ACM SIGGRAPH \ACMreprintyear~conference proceedings.}
+\newcommand{\reprinttext}[1]{\renewcommand{\ACMreprinttext}{#1}}
+
+\newcommand{\ACMreprintdates}{Month, ??--??}
+\newcommand{\reprintdates}[1]{\renewcommand{\ACMreprintdates}{#1}}
+
+\newif\ifACMuselogo 
+\ACMuselogofalse
+\newcommand{\ACMreprintlogo}{}
+\newcommand{\reprintlogo}[1]{\ACMuselogotrue\renewcommand{\ACMreprintlogo}{#1}}
+\newcommand{\ACMreprintlogobefore}{}
+\newcommand{\reprintlogobefore}[1]{\renewcommand{\ACMreprintlogobefore}{#1}}
+% -- End change by AWB 
 
 %%%
 
@@ -194,6 +304,13 @@
       \renewcommand{\@oddfoot}{\hfil\textrm{\thepage}\hfil}%
     \fi%
 
+% -- Begin change by AWB (reprint mod)
+    \if@ACMreprint%
+      \renewcommand{\@oddhead}{}
+      \renewcommand{\@oddfoot}{\hfil\textrm{\thepage}\hfil}%
+    \fi%
+% -- End change by AWB
+
     \if@ACMreview%
       \renewcommand{\@oddhead}{\hfil\textit{\large\@ACMreviewtext}\hfil}%
       \renewcommand{\@oddfoot}{\hfil\textrm{\thepage}\hfil}%
@@ -213,6 +330,13 @@
       \renewcommand{\@oddfoot}{\hfil\textrm{\thepage}\hfil}%
     \fi%
 
+% -- Begin change by AWB (reprint mod)
+    \if@ACMreprint%
+      \renewcommand{\@oddhead}{\hfil\textit{\large\@ACMreprinttext}\hfil}%
+      \renewcommand{\@oddfoot}{\hfil\textrm{\thepage}\hfil}%
+    \fi%
+% -- End change by AWB
+
     \if@ACMreview%
       \renewcommand{\@oddhead}{\hfil\textit{\large\@ACMreviewtext}\hfil}%
       \renewcommand{\@oddfoot}{\hfil\textrm{\thepage}\hfil}%
@@ -223,6 +347,63 @@
 }
 
 % no page numbers!
+
+% -- Begin change by AWB
+% Set up pretty mode... 
+\if@ACMpretty%
+  \typeout{Using pretty SIGGRAPH mode.}
+
+  \newcommand{\ACMheadI}{}
+  \newcommand{\ACMheadO}{%
+    \ifodd\thepage%
+      {Computer Graphics Proceedings, Annual Conference Series, \ACMreprintyear}%
+    \else%
+      {ACM SIGGRAPH \ACMreprintyear, \ACMreprintlocation, \ACMreprintdates, \ACMreprintyear}%
+    \fi%
+  }
+
+  \newcommand{\ACMheadF}{Computer Graphics Proceedings, Annual Conference Series, \ACMreprintyear}
+
+  \newcommand{\ACMfootI}{}
+  \newcommand{\ACMfootO}{\thepage}
+
+  \newcommand{\ACMheadR}{\ifodd\thepage{\ACMheadO}\else{\ACMheadI}\fi}
+  \newcommand{\ACMheadL}{\ifodd\thepage{\ACMheadI}\else{\ACMheadO}\fi}
+
+  \newcommand{\ACMfootR}{\ifodd\thepage{\ACMfootO}\else{\ACMfootI}\fi}
+  \newcommand{\ACMfootL}{\ifodd\thepage{\ACMfootI}\else{\ACMfootO}\fi}
+
+  \renewcommand{\ps@plain}{%
+    \renewcommand{\@oddhead}{%
+      {\fontsize{8}{8}\textsf{%
+        \makebox[0in][l]{\rule[-0.75ex]{\textwidth}{0.4pt}}\mbox{\ACMheadL}\hfill\mbox{\ACMheadR}}%
+      }}
+    \renewcommand{\@oddfoot}{%
+      {\fontsize{8}{8}\textsf{%
+        \mbox{\ACMfootL}\hfill\mbox{\ACMfootR}}%
+      }}
+    \renewcommand{\@evenhead}{\@oddhead}
+    \renewcommand{\@evenfoot}{\@oddfoot}
+  }
+
+  \renewcommand{\ps@empty}{%
+    \renewcommand{\@oddhead}{%
+      {\fontsize{8}{8}\textsf{%
+        \makebox[0in][l]{\rule[-0.75ex]{\textwidth}{0.4pt}}%
+        \raisebox{-.33in}[0in][0in]{\makebox[0in][l]{%
+           \colorbox{white}{\ifACMuselogo\ACMreprintlogobefore\includegraphics[height=.66in]{\ACMreprintlogo}\fi~~~}%
+        }}
+        \hfill\mbox{\ACMheadF}}%
+      }}
+    \renewcommand{\@oddfoot}{%
+      {\fontsize{8}{8}\textsf{%
+        \mbox{\ACMfootL}\hfill\mbox{\ACMfootR}}%
+      }}
+    \renewcommand{\@evenhead}{\@oddhead}
+    \renewcommand{\@evenfoot}{\@oddfoot}
+  }
+\fi
+% -- End change by AWB
 
 \pagestyle{plain}
 
@@ -316,8 +497,10 @@
     \refname\@mkboth{\sl\uppercase{\refname}}{\sl\uppercase{\refname}}}
   \list{\relax}{\setlength{\labelsep}{0em}
                 \setlength{\itemindent}{-\bibhang}
+                %\setlength{\itemsep}{-2mm}  % MJK: tighten bibliography
                 \setlength{\leftmargin}{\bibhang}}
   \def\newblock{\hskip .11em plus .33em minus .07em}
+  %\def\newblock{\hskip .11em plus 0em minus 0em}  % MJK: swap with prior line
   \sloppy\clubpenalty4000\widowpenalty4000
   \sfcode`\.=1000\relax}
 
@@ -496,14 +679,38 @@
     \fi%
   }%
   \fi
+  \if@ACMreprint
+  {%
+    \ifx\@ACMarticleDOI\@ACMempty%
+	  \ClassWarningNoLine{acmsiggraph}{Please set \noexpand\TOGarticleDOI.}%
+	\fi%
+    {\bf Links:}%
+    \sc%
+    \ifx\@ACMarticleDOI\@ACMempty\else%
+      \hspace{0.09in}\href{http://doi.acm.org/10.1145/\@ACMarticleDOI}{\icon@DL}%
+     \ifx\@ACMarticleDOIsuffix\@ACMempty\else%
+       \hspace{0.09in}\href{http://portal.acm.org/ft_gateway.cfm?id=\@ACMarticleDOIsuffix&type=pdf}{\icon@PDF}\fi%
+     \ifx\@ACMurlWeb\@ACMempty\else%
+       \hspace{0.09in}\href{\@ACMurlWeb}{\icon@Web}\fi%
+     \ifx\@ACMurlVideo\@ACMempty\else%
+       \hspace{0.09in}\href{\@ACMurlVideo}{\icon@Video}\fi%
+     \ifx\@ACMurlData\@ACMempty\else%
+       \hspace{0.09in}\href{\@ACMurlData}{\icon@Data}\fi%
+     \ifx\@ACMurlCode\@ACMempty\else%
+       \hspace{0.09in}\href{\@ACMurlCode}{\icon@Code}\fi%
+    \fi%
+  }%
+  \fi
 }
 
 % Package hyperref should come late in class file to properly apply to any modified commands.
 \RequirePackage{ifpdf}
 \ifpdf
-  \usepackage[pdftex,breaklinks,hyperfootnotes=false,bookmarks=false]{hyperref}
+  %\usepackage[pdftex,breaklinks,hyperfootnotes=false,bookmarks=false]{hyperref}
+  \usepackage[pdftex,breaklinks,hyperfootnotes=false,bookmarks=true,pagebackref=true]{hyperref}
 \else
-  \usepackage[hyperfootnotes=false,bookmarks=false]{hyperref}
+  %\usepackage[hyperfootnotes=false,bookmarks=false]{hyperref}
+  \usepackage[hyperfootnotes=false,bookmarks=true,pagebackref=true]{hyperref}
 \fi
 \hypersetup{
   colorlinks=true,linkcolor=black,citecolor=black,urlcolor=black,breaklinks=true
