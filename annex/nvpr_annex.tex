@@ -1,0 +1,275 @@
+
+% NV_path_rendering API
+
+%%% The ``\documentclass'' command has one parameter, based on the kind of
+%%% document you are preparing.
+%%%
+%%% [annual] - Technical paper accepted for presentation at the ACM SIGGRAPH 
+%%%   or SIGGRAPH Asia annual conference.
+%%% [sponsored] - Short or full-length technical paper accepted for 
+%%%   presentation at an event sponsored by ACM SIGGRAPH
+%%%   (but not the annual conference Technical Papers program).
+%%% [abstract] - A one-page abstract of your accepted content
+%%%   (Technical Sketches, Posters, Emerging Technologies, etc.). 
+%%%   Content greater than one page in length should use the "[sponsored]"
+%%%   parameter.
+%%% [preprint] - A preprint version of your final content.
+%%% [review] - A technical paper submitted for review. Includes line
+%%%   numbers and anonymization of author and affiliation information.
+
+%\documentclass[review]{acmsiggraph}            % review
+\documentclass{acmsiggraph}          % preprint
+%\documentclass[reprint,pretty]{acmsiggraph}          % preprint
+%\documentclass{article}
+
+%% Uncomment one of the five lines above depending on where your paper is
+%% in the conference process. ``review'' and ``widereview'' are for review
+%% submission, ``preprint'' is for pre-publication, and ``final'' is for
+%% the version to be printed. The ``final'' variant will accept the 
+%% ``annualconference'' parameter, which changes the height of the space
+%% left clear for the ACM copyright information.
+
+%% The 'helvet' and 'times' packages define the typefaces used for
+%% serif and sans serif type in this document. Computer Modern Roman 
+%% is used for mathematics typesetting. The scale factor is set to .92
+%% to bring the sans-serif type in line with the serif type.
+
+
+%\usepackage[scaled=.92]{helvet}
+\usepackage{times}
+\usepackage{url}
+
+%% The 'graphicx' package allows for the inclusion of EPS figures.
+
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multirow}
+\usepackage{epstopdf}
+\usepackage{listings}
+%\usepackage{color}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[super]{nth}  % http://www.ctan.org/pkg/nth
+
+%\usepackage[all=normal,floats,leading,paragraphs,charwidths,tracking,wordspacing,lists=tight]{savetrees}
+%\usepackage[all=normal,bibliography]{savetrees}
+
+%\usepackage{natbib}
+%\usepackage{enumitem}
+%%\setlist{nolistsep}
+%%\setlist{notopsep}
+%%\setlist{noitemsep}
+\usepackage{paralist}
+
+\usepackage{marvosym}
+
+\usepackage{etoolbox}
+
+
+\pagenumbering{arabic}
+
+%%% 1. ``\TOGonlineID''
+%%% When you submit your paper for review, please use the ``\TOGonlineID''
+%%% command to include the online ID value assigned to your paper by the
+%%% submission management system. Replace '45678' with the value you were
+%%% assigned.
+
+%\TOGonlineid{0389}
+
+%%% 2. ``\TOGvolume'' and ``\TOGnumber''
+%%% If you are preparing a preprint of your accepted paper, and your paper
+%%% will be published in an issue of the ACM ``Transactions on Graphics''
+%%% journal, replace the ``0'' values in the commands below with the correct
+%%% volume and number values for that issue - you'll get them before your
+%%% final paper is due.
+
+%\TOGvolume{31}
+%\TOGnumber{6}
+%\TOGarticleDOI{2366145.2366183}
+
+%\reprintyear{2012}
+%\reprintlocation{Singapore}
+%\reprintdates{November 28--December 1}
+%\reprintlogo{SA2012_white}
+%\reprintlogobefore{\hspace*{-.3in}}
+
+\definecolor{DarkGreen}{RGB}{0,100,0}
+\newcommand{\comment}[1]{}
+
+% lstlisting settings
+% syntax coloring
+\lstset{
+language=C,
+showspaces=false,
+showstringspaces=false,
+basicstyle=\ttfamily \small,
+commentstyle=\color{DarkGreen} \em,
+keywordstyle=\color{blue},
+morekeywords=
+{
+CENTROID,
+COLOR,
+GL_BOLD_BIT_NV,
+GL_CLOSE_PATH_NV,
+GL_CONVEX_HULL_NV,
+GL_COUNT_UP_NV,
+GL_FLOAT,
+GL_KEEP,
+GL_LINE_TO_NV,
+GL_MITER_TRUNCATE_NV,
+GL_MODELVIEW,
+GL_MOVE_TO_NV,
+GL_NOTEQUAL,
+GL_PATH_FORMAT_SVG_NV,
+GL_PATH_JOIN_STYLE_NV,
+GL_PATH_JOIN_STYLE_NV,
+GL_PATH_MITER_LIMIT_NV,
+GL_PATH_STROKE_WIDTH_NV,
+GL_PROJECTION,
+GL_ROUND_NV,
+GL_SHORT,
+GL_STANDARD_FONT_NAME_NV,
+GL_STENCIL_TEST,
+GL_SYSTEM_FONT_NAME_NV,
+GL_USE_MISSING_GLYPH_NV,
+GL_PATH_OBJECT_BOUNDING_BOX_NV,
+GL_ZERO,
+GL_TEXTURE0,
+GL_TEXTURE_2D,
+GLbitfield,
+GLenum,
+GLfloat,
+GLsizei,
+GLubyte,
+GLuint,
+GLint,
+NULL,
+TEXCOORD0,
+TEXUNIT0,
+discard,
+float2,
+float3,
+float4,
+glActiveTexture,
+glColor3f,
+glCoverFillPathNV,
+glCoverStrokePathNV,
+glEnable,
+glGenPathsNV,
+glMatrixLoadIdentityEXT,
+glMatrixOrthoEXT,
+glPathCommandsNV,
+glPathDashArrayNV,
+glPathGlyphRangeNV,
+glPathParameterfNV,
+glPathParameteriNV,
+glPathStringNV,
+glStencilFillPathNV,
+glStencilFunc,
+glStencilOp,
+glStencilStrokePathNV,
+glPathTexGenNV,
+length,
+out,
+sampler1D,
+strlen,
+tex1D,
+uniform,
+}
+}
+
+% hyperref features
+\hypersetup{
+colorlinks=true,
+pdfstartview=FitV,
+linkcolor=blue,
+citecolor=blue,
+urlcolor=blue,
+}
+
+%\usepackage{amsfonts}
+\newcommand{\tickYes}{{\color{DarkGreen} \checkmark}}
+\usepackage{pifont}
+\newcommand{\tickNo}{{\color{BrickRed} \hspace{1pt}\ding{55}}}
+
+%% use this for zero \parindent and non-zero \parskip, intelligently.
+
+\usepackage{parskip}
+
+%% Optional: the 'caption' package provides a nicer-looking replacement
+%% for the standard caption environment. With 'labelfont=bf,'textfont=it',
+%% caption labels are bold and caption text is italic.
+
+\usepackage[labelfont=bf,textfont=it]{caption}
+
+\makeatletter
+\g@addto@macro\@verbatim\small
+\makeatother
+
+\pdfcompresslevel0
+
+%% Paper title.
+
+\title{Programming with NV\_path\_rendering: \\ An Annex to the SIGGRAPH paper {\em GPU-accelerated Path Rendering}}
+
+\newcommand{\asp}{\hspace*{12mm}}
+\makeatletter
+\author{Mark J. Kilgard \\{\em NVIDIA Corporation}%
+\thanks{e-mail: mjk@nvidia.com}
+}
+\makeatother
+
+%%% The ``pdfauthor'' command accepts the authors of the work,
+%%% comma-delimited, and adds this information to the PDF metadata.
+
+\pdfauthor{Mark Kilgard}
+
+%%% Keywords that describe your work. The ``\keywordlist'' command will print
+%%% them out.
+
+\keywords{NV\_path\_rendering, path rendering, vector graphics, OpenGL, stencil buffer}
+
+%%%%%% START OF THE PAPER %%%%%%
+
+\newcommand{\urlwofont}[1]
+{
+\urlstyle{same}\url{#1}
+}
+
+\begin{document}
+
+%% The ``\maketitle'' command must be the first command after the
+%% ``\begin{document}'' command. It prepares and prints the title block.
+
+\maketitle
+
+%\makeatletter
+%\preto{\@verbatim}{\topsep=0pt \partopsep=0pt }
+%\preto{\@lstlisting}{\topsep=0pt \partopsep=0pt }
+%\makeatother
+
+%% Abstract section.
+
+%\vspace{-10pt}
+
+\input{abstract}
+
+%% ACM Computing Review (CR) categories. 
+%% See <http://www.acm.org/class/1998/> for details.
+%% The ``\CRcat'' command takes four arguments.
+%% The ``\keywordlist'' command prints out the keywords.
+\keywordlist
+
+\input{api}
+
+\input{resources}
+
+\pdfbookmark[1]{References}{bkmk:references}
+\bibliographystyle{acmsiggraph}
+%\nocite{*}  % include references not cited in the paper
+\bibliography{gpupathrender}
+
+\end{document}
+
+% end
